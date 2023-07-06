@@ -1,0 +1,151 @@
+drop database HomeWork;
+drop table Students;
+drop table Teachers;
+drop table Competencies;
+drop table Teachers2Competencies;
+drop table Courses;
+drop table Students2Courses;
+
+create database HomeWork;
+use HomeWork;
+create table Students (
+    id int primary key auto_increment,
+    name varchar(128) not null,
+    age int
+);
+create table Teachers (
+    id int primary key auto_increment,
+    name varchar(128) not null,
+    age int
+);
+create table Competencies (
+    id int primary key auto_increment,
+    title varchar(128) not null
+);
+create table Teachers2Competencies (
+    id int primary key auto_increment,
+    teacher_id int,
+    competence_id int
+);
+create table Courses (
+    id int primary key auto_increment,
+    teacher_id int,
+    title varchar(128) not null,
+    headman_id int
+);
+create table Students2Courses (
+    id int primary key auto_increment,
+    student_id int,
+    course_id int
+);
+
+
+insert into Students (name, age) values ('Анатолий', 29);
+insert into Students (name, age) values ('Олег', 25);
+insert into Students (name, age) values ('Семен', 27);
+insert into Students (name, age) values ('Олеся', 28);
+insert into Students (name, age) values ('Ольга', 31);
+insert into Students (name, age) values ('Иван', 22);
+
+insert into Teachers (name, age) values ('Петр', 39);
+insert into Teachers (name, age) values ('Максим', 35);
+insert into Teachers (name, age) values ('Антон', 37);
+insert into Teachers (name, age) values ('Всеволод', 38);
+insert into Teachers (name, age) values ('Егор', 41);
+insert into Teachers (name, age) values ('Светлана', 32);
+
+insert into Competencies (title) values ('Математика');
+insert into Competencies (title) values ('Информатика');
+insert into Competencies (title) values ('Программирование');
+insert into Competencies (title) values ('Графика');
+
+insert into Teachers2Competencies (teacher_id, competence_id) values (1, 1);
+insert into Teachers2Competencies (teacher_id, competence_id) values (2, 1);
+insert into Teachers2Competencies (teacher_id, competence_id) values (2, 3);
+insert into Teachers2Competencies (teacher_id, competence_id) values (3, 2);
+insert into Teachers2Competencies (teacher_id, competence_id) values (4, 1);
+insert into Teachers2Competencies (teacher_id, competence_id) values (5, 3);
+
+insert into Courses (teacher_id, title, headman_id) values (2, 'Алгебра логики', 2);
+insert into Courses (teacher_id, title, headman_id) values (3, 'Математическая статистика', 3);
+insert into Courses (teacher_id, title, headman_id) values (5, 'Высшая математика', 5);
+insert into Courses (teacher_id, title, headman_id) values (1, 'Javascript', 1);
+insert into Courses (teacher_id, title, headman_id) values (5, 'Базовый Python', 1);
+
+insert into Students2Courses (student_id, course_id) values (1, 1);
+insert into Students2Courses (student_id, course_id) values (2, 1);
+insert into Students2Courses (student_id, course_id) values (3, 2);
+insert into Students2Courses (student_id, course_id) values (3, 3);
+insert into Students2Courses (student_id, course_id) values (4, 5);
+
+-- 1) Вывести имена студентов и курсы, которые они проходят
+
+select 
+	t1.name,
+    t2.title
+from Students t1
+join Students2Courses t3 on t1.id = t3.student_id
+join Courses t2 on t3.course_id = t2.id; 
+
+-- 2) Вывести имена всех преподавателей с их компетенциями
+
+select t1.name, GROUP_CONCAT(t3.title) as competencies
+from Teachers t1
+join Teachers2Competencies t2 on t1.id = t2.teacher_id
+join Competencies t3 on t2.id = t3.id
+group by t1.id;
+
+-- 3) Найти преподавателя, у которого нет компетенций
+
+select 
+	t1.name
+from Teachers t1
+where not exists (
+    select *
+    from Teachers2Competencies t2
+    where t1.id = t2.teacher_id
+);
+
+-- 4) Найти имена студентов, которые не проходят ни один курс
+
+select 
+	Students.name
+from Students
+left join Students2Courses on Students.id = Students2Courses.student_id
+where Students2Courses.student_id is null;
+
+-- 5) Найти курсы, которые не посещает ни один студент
+
+select Courses.title
+from Courses
+left join Students2Courses 
+on Courses.id = Students2Courses.course_id
+where Students2Courses.course_id is null;
+
+-- 6) Найти компетенции, которых нет ни у одного преподавателя
+
+select 
+	Competencies.title
+from Competencies
+left join Teachers2Competencies 
+on Competencies.id = Teachers2Competencies.competence_id
+where Teachers2Competencies.competence_id is null;
+
+-- 7) Вывести название курса и имя старосты
+
+select Courses.title, 
+	Students.name as starosta
+from Courses
+inner join Students on Courses.headman_id = Students.id;
+
+
+-- 8) Вывести имя студента и имена старост, которые есть на курсах, которые он проходит
+select Students.name as student, 
+	Headman.name as headman
+from Students
+inner join Students2Courses on Students.id = Students2Courses.student_id
+inner join Courses on Students2Courses.course_id = Courses.id
+inner join Students as Headman on Courses.headman_id = Headman.id;
+
+
+
